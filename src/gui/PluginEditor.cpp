@@ -1,4 +1,4 @@
-#include "PluginProcessor.h"
+#include "../PluginProcessor.h"
 #include "PluginEditor.h"
 // TRANSLATION: "I need the blueprints for both the Brain (Processor) and the Face (Editor)."
 

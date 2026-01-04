@@ -3,7 +3,6 @@
 
 class voice{
     public:
-        voice();
         bool active;
         
         int playHead;
@@ -11,8 +10,8 @@ class voice{
         float numChannels;
 
         // to keep track of voices for monophony
-        const int voiceID;
-        static int nextID;
+        //const int voiceID;
+        //static int nextID;
 
         juce::AudioBuffer<float>& assignedBuffer;
 

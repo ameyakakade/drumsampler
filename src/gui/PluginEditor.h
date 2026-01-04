@@ -2,7 +2,7 @@
 // TRANSLATION: "Hey Compiler, read this file only ONE time. 
 // If you see it again, ignore it so we don't get stuck in an infinite loop."
 
-#include "PluginProcessor.h"
+#include "../PluginProcessor.h"
 // TRANSLATION: "I need to know what a 'Processor' is. 
 // Go read the file 'PluginProcessor.h' right now and copy its contents here 
 // so I can understand the audio engine."

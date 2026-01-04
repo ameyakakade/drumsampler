@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
-#include "Effects.h"
-#include "FileLoader.h"
+#include "gui/PluginEditor.h"
+#include "dsp/Effects.h"
+#include "data/SamplePad.h"
 #include <queue>
 #include <algorithm>
 

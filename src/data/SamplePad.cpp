@@ -1,5 +1,5 @@
 #include <juce_audio_formats/juce_audio_formats.h>
-#include "FileLoader.h"
+#include "SamplePad.h"
 
 // passing in the reference to the buffer in which file is to be loaded into
 void convertFileIntoBuffer(const juce::File& file, juce::AudioBuffer<float>& buffer){
