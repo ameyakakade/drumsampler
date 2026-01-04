@@ -69,6 +69,7 @@ juce_add_plugin(AudioPluginExample
 
 target_sources(AudioPluginExample
     PRIVATE
+        src/Voices.cpp
         src/Effects.cpp
         src/FileLoader.cpp
         src/PluginEditor.cpp
