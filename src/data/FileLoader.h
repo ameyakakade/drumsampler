@@ -1,22 +1,18 @@
 #pragma once
 #include <juce_audio_formats/juce_audio_formats.h>
+#include "../dsp/Voices.h"
 
 void convertFileIntoBuffer(const juce::File& file, juce::AudioBuffer<float>& buffer);
 
+// sample pad holds a audio buffer
 class samplePad{
     private:
-        int playPosition;
         juce::AudioBuffer<float> sample;
-        bool playState;
-        const float* ch0;
-        const float* ch1;
-        int length;
         static int nextid;
-        const int id;
 
     public:
-        void startPlayback();
+        const int id;
         samplePad();
-        float playFile(int ch);
+        juce::AudioBuffer<float>* getFile();
         void updateFile(juce::File& file);
 };

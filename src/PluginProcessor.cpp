@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
 #include "gui/PluginEditor.h"
 #include "dsp/Effects.h"
-#include "data/SamplePad.h"
+#include "data/FileLoader.h"
 #include <queue>
 #include <algorithm>
 
@@ -32,6 +32,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     pad1.updateFile(kick);
     pad2.updateFile(snare);
     pad3.updateFile(hat);
+    pool.prepare(30);
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -117,6 +118,7 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     currentSampleRate = sampleRate;
     // TRANSLATION: "The User just hit Play (or loaded the plugin)."
     // "This is where I reset my math. If I had a Delay line, I would clear the memory here."
+    startPlayback(0);
     juce::ignoreUnused (sampleRate, samplesPerBlock);
     
 }
@@ -177,24 +179,6 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto* channelData1 = buffer.getWritePointer (0);
     auto* channelData2 = buffer.getWritePointer (1);
 
-    // lets write a simple delay thing
-
-//    DBG("sizeofqueue" << delayTime*currentSampleRate);
-//    DBG("delaytime" << delay_time);
-//    DBG("samplerate" << currentSampleRate);
-       
-    for(int i = 0; i<noOfSamples; i++){
-
-       channelData1[i] += pad1.playFile(0);
-       channelData2[i] += pad1.playFile(1);
-
-       channelData1[i] += pad2.playFile(0);
-       channelData2[i] += pad2.playFile(1);
-
-       channelData1[i] += pad3.playFile(0);
-       channelData2[i] += pad3.playFile(1);
-   }
-       
     if(check){
         distortFn(buffer, d);
         DBG("Distort");
@@ -202,6 +186,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     delay.apply(buffer, sizeOfQueue, d);
 
+    pool.renderAll(buffer);
 }
 
 //==============================================================================
@@ -240,4 +225,11 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     // TRANSLATION: "Hello Reaper. You asked for a plugin?"
     // "Here is a new instance of my Processor."
     return new AudioPluginAudioProcessor();
+}
+
+
+void AudioPluginAudioProcessor::startPlayback(int getById){
+    if(pad1.id==getById){pool.assignVoice(*pad1.getFile());}
+    if(pad2.id==getById){pool.assignVoice(*pad2.getFile());}
+    if(pad3.id==getById){pool.assignVoice(*pad3.getFile());}
 }

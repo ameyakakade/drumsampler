@@ -3,7 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 #include "dsp/Effects.h"
-#include "data/SamplePad.h"
+#include "data/FileLoader.h"
 #include "dsp/Voices.h"
 
 //==============================================================================
@@ -46,6 +46,9 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // fn to start playback 
+    void startPlayback(int id);
+
     delayBuffer delay;    
 
     std::atomic<float> raw_vol = {1.0f};
@@ -57,6 +60,8 @@ public:
     samplePad pad1;
     samplePad pad2;
     samplePad pad3;
+
+    voiceManager pool;
 
 private:
     int playPosition = 0;

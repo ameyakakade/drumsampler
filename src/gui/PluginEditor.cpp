@@ -65,7 +65,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     pad1Button.setButtonText("Drum 1");
     pad1Button.onClick = [this]
     {
-        processorRef.pad1.startPlayback();
+        processorRef.startPlayback(1);
     };
     addAndMakeVisible (pad1Button);
 
@@ -73,7 +73,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     pad2Button.setButtonText("Drum 2");
     pad2Button.onClick = [this]
     {
-        processorRef.pad2.startPlayback();
+        processorRef.startPlayback(2);
     };
     addAndMakeVisible (pad2Button);
 
@@ -81,7 +81,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     pad3Button.setButtonText("Drum 3");
     pad3Button.onClick = [this]
     {
-        processorRef.pad3.startPlayback();
+        processorRef.startPlayback(3);
     };
     addAndMakeVisible (pad3Button);
 
