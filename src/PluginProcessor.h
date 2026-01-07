@@ -56,10 +56,8 @@ public:
     std::atomic<bool> distort = {false}; 
 
     juce::AudioBuffer<float> bufferOne;
-
-    samplePad pad1;
-    samplePad pad2;
-    samplePad pad3;
+    
+    samplePadManager samplePool;
 
     voiceManager pool;
 

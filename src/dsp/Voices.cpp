@@ -6,18 +6,18 @@ voice::voice(){
     playHead = 0;
 }
 
-void voice::startVoice(juce::AudioBuffer<float>& buffer, int set_id){
+void voice::startVoice(juce::AudioBuffer<float>& buffer, int midiNote){
     active = true;
     numSamples = buffer.getNumSamples();
     numChannels = buffer.getNumChannels();
     playHead = 0;
     assignedBuffer = &buffer;
+    setMidiNote = midiNote;
 }
 
-void voice::renderAudio(juce::AudioBuffer<float>& buffer){
+void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples){
 
-    float numBufferSamples = buffer.getNumSamples();
-    float numBufferChannels = buffer.getNumChannels();
+    int numBufferChannels = buffer.getNumChannels();
 
     for(int ch = 0; ch<numBufferChannels && ch<numChannels; ch++){
         
@@ -25,14 +25,14 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer){
         auto* channelData = buffer.getWritePointer(ch);
         int playHeadNow = playHead;
 
-        for(int i = 0; i<numBufferSamples; i++){
+        for(int i = startSample; i<startSample+noOfSamples; i++){
             if(playHeadNow>=numSamples) break;
             channelData[i] += sourceData[playHeadNow++];
         }
         
     }
 
-    playHead += numBufferSamples;
+    playHead += noOfSamples;
 
     if(playHead>=numSamples){
         playHead = numSamples;
@@ -54,10 +54,10 @@ void voiceManager::prepare(int num){
 
 }
 
-void voiceManager::renderAll(juce::AudioBuffer<float>& buffer){
+void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples){
     for(auto& voice : voices){
         if(voice->active){
-            voice->renderAudio(buffer);
+            voice->renderAudio(buffer, startSample, noOfSamples);
         }
     }
 }
@@ -71,3 +71,4 @@ void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer){
         }
     }
 }
+

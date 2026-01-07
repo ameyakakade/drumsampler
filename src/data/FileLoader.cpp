@@ -27,7 +27,7 @@ void convertFileIntoBuffer(const juce::File& file, juce::AudioBuffer<float>& buf
     }
 }
 
-int samplePad::nextid = 1;
+int samplePad::nextid = 0;
 
 samplePad::samplePad() : id(nextid++){
 }
@@ -39,4 +39,19 @@ void samplePad::updateFile(juce::File& file){
 // this will return a pointer to the audio buffer
 juce::AudioBuffer<float>* samplePad::getFile(){
     return &sample;
+}
+
+void samplePadManager::createPads(int no){ 
+    numOfPads = no;
+    for(int i = 0; i<no; i++){
+        pads.emplace_back(std::make_unique<samplePad>());
+    }
+    for(int i = 0; i<no; i++){
+        DBG(pads[i]->id);
+    }
+}
+
+
+void samplePadManager::updatePadFile(int id, juce::File& inputFile){
+    pads[id]->updateFile(inputFile);
 }

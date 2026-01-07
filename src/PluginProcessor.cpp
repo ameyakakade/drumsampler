@@ -29,9 +29,13 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     juce::File kick("~/Documents/Music/demo/kick.wav");
     juce::File snare("~/Documents/Music/demo/snare.wav");
     juce::File hat("~/Documents/Music/demo/hat.wav");
-    pad1.updateFile(kick);
-    pad2.updateFile(snare);
-    pad3.updateFile(hat);
+
+    // create 10 sample pads
+    samplePool.createPads(10);
+    // add files to first 3
+    samplePool.updatePadFile(0, kick);
+    samplePool.updatePadFile(1, snare);
+    samplePool.updatePadFile(2, hat);
     pool.prepare(30);
 }
 
@@ -118,9 +122,6 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     currentSampleRate = sampleRate;
     // TRANSLATION: "The User just hit Play (or loaded the plugin)."
     // "This is where I reset my math. If I had a Delay line, I would clear the memory here."
-    startPlayback(0);
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
-    
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -155,8 +156,9 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
     // TRANSLATION: This is the AUDIO LOOP. It runs ~44,000 times a second.
-    
-    juce::ignoreUnused (midiMessages);
+
+    // checks for clicks from ui 
+    // fn that checks if a trigger is on and adds it to the voice pool    
 
     juce::ScopedNoDenormals noDenormals; // CPU safety feature.
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -186,7 +188,8 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     delay.apply(buffer, sizeOfQueue, d);
 
-    pool.renderAll(buffer);
+    pool.renderAll(buffer, 0, noOfSamples);
+
 }
 
 //==============================================================================
@@ -228,8 +231,3 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 
-void AudioPluginAudioProcessor::startPlayback(int getById){
-    if(pad1.id==getById){pool.assignVoice(*pad1.getFile());}
-    if(pad2.id==getById){pool.assignVoice(*pad2.getFile());}
-    if(pad3.id==getById){pool.assignVoice(*pad3.getFile());}
-}

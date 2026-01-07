@@ -4,20 +4,18 @@
 class voice{
     public:
         bool active;
-        
-        int playHead;
-        float numSamples;
-        float numChannels;
 
-        // to keep track of voices for monophony
-        //const int voiceID;
-        //static int nextID;
+        int playHead;
+        int numSamples;
+        int numChannels;
+
+        int setMidiNote;
 
         juce::AudioBuffer<float>* assignedBuffer;
 
         voice();
-        void startVoice(juce::AudioBuffer<float>& buffer, int set_id);
-        void renderAudio(juce::AudioBuffer<float>& buffer);
+        void startVoice(juce::AudioBuffer<float>& buffer, int midiNote);
+        void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples);
 };
 
 class voiceManager{
@@ -27,6 +25,6 @@ class voiceManager{
         int numVoices;
     public:
         void prepare(int num);
-        void renderAll(juce::AudioBuffer<float>& buffer);
+        void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples);
         void assignVoice(juce::AudioBuffer<float>& buffer);
 };
