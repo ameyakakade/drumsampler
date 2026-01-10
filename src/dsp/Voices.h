@@ -10,11 +10,12 @@ class voice{
         int numChannels;
 
         int setMidiNote;
+        float velocity;
 
         juce::AudioBuffer<float>* assignedBuffer;
 
         voice();
-        void startVoice(juce::AudioBuffer<float>& buffer, int midiNote);
+        void startVoice(juce::AudioBuffer<float>& buffer, int midiNote, float vel);
         void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples);
 };
 
@@ -26,5 +27,5 @@ class voiceManager{
     public:
         void prepare(int num);
         void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples);
-        void assignVoice(juce::AudioBuffer<float>& buffer);
+        void assignVoice(juce::AudioBuffer<float>& buffer, int midiNote, float velocity);
 };

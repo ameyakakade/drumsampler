@@ -6,13 +6,14 @@ voice::voice(){
     playHead = 0;
 }
 
-void voice::startVoice(juce::AudioBuffer<float>& buffer, int midiNote){
+void voice::startVoice(juce::AudioBuffer<float>& buffer, int midiNote, float vel){
     active = true;
     numSamples = buffer.getNumSamples();
     numChannels = buffer.getNumChannels();
     playHead = 0;
     assignedBuffer = &buffer;
     setMidiNote = midiNote;
+    velocity = vel;
 }
 
 void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int noOfSamples){
@@ -27,7 +28,7 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int n
 
         for(int i = startSample; i<startSample+noOfSamples; i++){
             if(playHeadNow>=numSamples) break;
-            channelData[i] += sourceData[playHeadNow++];
+            channelData[i] += sourceData[playHeadNow++]*velocity;
         }
         
     }
@@ -62,10 +63,10 @@ void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, 
     }
 }
 
-void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer){
+void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int midiNote, float velocity){
     for(int i = 0; i<numVoices; i++){
         if(!voices[i]->active){
-            voices[i]->startVoice(buffer, 0);
+            voices[i]->startVoice(buffer, midiNote, velocity);
             DBG("assigned at"<<i);
             break;
         }

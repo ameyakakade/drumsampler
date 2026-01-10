@@ -25,7 +25,6 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                        )
 #endif
 {
-    // TRANSLATION: "Constructor body is empty. All the setup happened in the list above."
     juce::File kick("~/Documents/Music/demo/kick.wav");
     juce::File snare("~/Documents/Music/demo/snare.wav");
     juce::File hat("~/Documents/Music/demo/hat.wav");
@@ -47,7 +46,6 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     samplePool.updatePadFile(6, fx);
     samplePool.updatePadFile(7, clap);
     pool.prepare(30);
-    pool.assignVoice(*samplePool.pads[2]->getFile());
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -64,32 +62,17 @@ const juce::String AudioPluginAudioProcessor::getName() const
 
 bool AudioPluginAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
     return true;
-   #else
-    return false;
-   #endif
-   // TRANSLATION: "Do I accept MIDI notes? (Checked against global settings)."
 }
 
 bool AudioPluginAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
-    return true;
-   #else
     return false;
-   #endif
-   // TRANSLATION: "Do I output MIDI notes? (Checked against global settings)."
 }
 
 bool AudioPluginAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
-    return true;
-   #else
     return false;
-   #endif
-   // TRANSLATION: "Am I a MIDI effect? (Checked against global settings)."
 }
 
 double AudioPluginAudioProcessor::getTailLengthSeconds() const
@@ -196,9 +179,10 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         if(msg.isNoteOn()){
             int note = msg.getNoteNumber();    
             DBG(note);
+            float v = msg.getFloatVelocity();
             auto *file = samplePool.getFileByMidiNote(note);
             if(file){
-                pool.assignVoice(*file);
+                pool.assignVoice(*file, note, v);
             }else{
                 DBG("Note not found");
             }
