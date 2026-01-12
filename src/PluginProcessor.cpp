@@ -184,7 +184,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             auto* file = pair.first;
             double sRate = pair.second;
             if(file){
-                pool.assignVoice(*file, note, v, sRate);
+                pool.assignVoice(*file, note, v, sRate, currentSampleRate);
             }else{
                 DBG("Note not found");
             }

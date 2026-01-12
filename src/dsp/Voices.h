@@ -3,7 +3,7 @@
 
 class voice{
     private:
-        int playHead;
+        double playHead;
 
     public:
         bool active;
@@ -18,7 +18,7 @@ class voice{
         juce::AudioBuffer<float>* assignedBuffer;
 
         voice();
-        void startVoice(juce::AudioBuffer<float>& buffer, int midiNote, float vel, double sRate);
+        void startVoice(juce::AudioBuffer<float>& buffer, int midiNote, float vel, double sRate, double bufferSRate);
         void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
 };
 
@@ -30,5 +30,5 @@ class voiceManager{
     public:
         void prepare(int num);
         void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
-        void assignVoice(juce::AudioBuffer<float>& buffer, int midiNote, float velocity, double sRate);
+        void assignVoice(juce::AudioBuffer<float>& buffer, int midiNote, float velocity, double sRate, double bufferSRate);
 };
