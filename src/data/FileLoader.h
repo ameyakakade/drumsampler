@@ -15,7 +15,7 @@ class samplePad{
         const int id;
         samplePad();
         juce::AudioBuffer<float>* getFile();
-        void updateFile(juce::File& file);
+        void updateFile(juce::File& file, juce::AudioFormatManager& formatManager);
         double sampleRate;
 };
 
@@ -25,6 +25,6 @@ class samplePadManager{
     public:
         std::vector<std::unique_ptr<samplePad>> pads;
         void createPads(int no);
-        void updatePadFile(int id, juce::File& inputFile);
+        void updatePadFile(int id, juce::File& inputFile, juce::AudioFormatManager& formatManager);
         std::pair<juce::AudioBuffer<float>*, double> getFileByMidiNote(int note);
 };

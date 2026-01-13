@@ -5,6 +5,8 @@
 #include <queue>
 #include <algorithm>
 
+
+
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -22,7 +24,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                         .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                         // TRANSLATION: "Also, give me a Stereo Output pair."
                      #endif
-                       )
+                       ),
+     tbcache(5),
+     thumb(32, formatManager, tbcache)
 #endif
 {
     juce::File kick("~/Documents/Music/demo/kick.wav");
@@ -34,17 +38,21 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     juce::File fx("~/Documents/Music/demo/fx.wav");
     juce::File clap("~/Documents/Music/demo/clap.wav");
 
+    formatManager.registerBasicFormats();
+
+    thumb.setSource(new juce::FileInputSource(kick));
+
     // create 10 sample pads
     samplePool.createPads(10);
     // add files to first 3
-    samplePool.updatePadFile(0, kick);
-    samplePool.updatePadFile(1, snare);
-    samplePool.updatePadFile(2, hat);
-    samplePool.updatePadFile(3, openhat);
-    samplePool.updatePadFile(4, stomp);
-    samplePool.updatePadFile(5, b808);
-    samplePool.updatePadFile(6, fx);
-    samplePool.updatePadFile(7, clap);
+    samplePool.updatePadFile(0, kick, formatManager);
+    samplePool.updatePadFile(1, snare, formatManager);
+    samplePool.updatePadFile(2, hat, formatManager);
+    samplePool.updatePadFile(3, openhat, formatManager);
+    samplePool.updatePadFile(4, stomp, formatManager);
+    samplePool.updatePadFile(5, b808, formatManager);
+    samplePool.updatePadFile(6, fx, formatManager);
+    samplePool.updatePadFile(7, clap, formatManager);
     pool.prepare(30);
 }
 

@@ -3,9 +3,8 @@
 #include "../dsp/Voices.h"
 
 // passing in the reference to the buffer in which file is to be loaded into
-double convertFileIntoBuffer(const juce::File& file, juce::AudioBuffer<float>& buffer){
-    juce::AudioFormatManager formatManager;
-    formatManager.registerBasicFormats();
+double convertFileIntoBuffer(const juce::File& file, juce::AudioBuffer<float>& buffer, juce::AudioFormatManager& formatManager){
+
     auto* reader = formatManager.createReaderFor(file);
     // this pointer will be null if file not found
 
@@ -35,8 +34,8 @@ int samplePad::nextid = 0;
 samplePad::samplePad() : id(nextid++){
 }
 
-void samplePad::updateFile(juce::File& file){
-    sampleRate = convertFileIntoBuffer(file, sample);
+void samplePad::updateFile(juce::File& file, juce::AudioFormatManager& formatManager){
+    sampleRate = convertFileIntoBuffer(file, sample, formatManager);
     DBG("sample rate:" << sampleRate);
 }
 
@@ -61,8 +60,8 @@ void samplePadManager::createPads(int no){
 }
 
 
-void samplePadManager::updatePadFile(int id, juce::File& inputFile){
-    pads[id]->updateFile(inputFile);
+void samplePadManager::updatePadFile(int id, juce::File& inputFile, juce::AudioFormatManager& formatManager){
+    pads[id]->updateFile(inputFile, formatManager);
 }
 
 

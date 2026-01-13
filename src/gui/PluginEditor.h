@@ -10,7 +10,7 @@
 //==============================================================================
 // TRANSLATION: "Just a decorative line to make the code look organized."
 
-class AudioPluginAudioProcessorEditor final : public juce::AudioProcessorEditor
+class AudioPluginAudioProcessorEditor final : public juce::AudioProcessorEditor, public juce::Timer
 // TRANSLATION: 
 // 1. class: "I am creating a new Blueprint."
 // 2. AudioPluginAudioProcessorEditor: "I am naming this blueprint 'AudioPluginAudioProcessorEditor'."
@@ -47,6 +47,8 @@ public:
     // TRANSLATION: "This is the Resizing Function."
     // 1. resized: "Run me whenever the user drags the window corner."
     // 2. override: "I am replacing the standard resize behavior."
+    
+    void timerCallback() override;
 
 private:
     // TRANSLATION: "Everything below this is TOP SECRET. Only code inside this specific file can touch these variables."
@@ -60,18 +62,10 @@ private:
     // 3. Why? The Editor (Window) needs to talk to the Processor (Audio) to tell it when knobs move.
 
     juce::Slider gainSlider; 
-    juce::Slider delaySlider; 
-    //make a object named gainslider with class "Juce::slider"
-
-    juce::TextButton aButton;
-    juce::TextButton pad1Button;
-    juce::TextButton pad2Button;
-    juce::TextButton pad3Button;
-    //make a object named aButton
+    double gain;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
     // TRANSLATION: "This is a Magic Macro (a shortcut)."
     // 1. NON_COPYABLE: "Prevent anyone from cloning this window. You cannot have two copies of the same window."
     // 2. LEAK_DETECTOR: "If I forget to delete this window when the plugin closes, scream at the programmer."
 };
-// TRANSLATION: "End of the Blueprint."

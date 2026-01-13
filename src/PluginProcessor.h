@@ -5,6 +5,8 @@
 #include "dsp/Effects.h"
 #include "data/FileLoader.h"
 #include "dsp/Voices.h"
+#include <juce_audio_utils/juce_audio_utils.h>
+
 
 //==============================================================================
 class AudioPluginAudioProcessor final : public juce::AudioProcessor
@@ -49,17 +51,19 @@ public:
     // fn to start playback 
     void startPlayback(int id);
 
-    delayBuffer delay;    
+    juce::AudioFormatManager formatManager;
 
     std::atomic<float> raw_vol = {1.0f};
     std::atomic<float> delayTime = {1.0f};
     std::atomic<bool> distort = {false}; 
-
-    juce::AudioBuffer<float> bufferOne;
     
-    samplePadManager samplePool;
 
+
+    samplePadManager samplePool;
+    juce::AudioThumbnailCache tbcache;
+    juce::AudioThumbnail thumb;
     voiceManager pool;
+
 
 private:
     int playPosition = 0;

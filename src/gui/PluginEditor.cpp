@@ -16,11 +16,14 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // TRANSLATION: "Hey Compiler, don't yell at me (Warning) for not using 'processorRef' in this function. 
     // I know I haven't touched it yet, just ignore it."
 
+
+
 // 1. Configure the Slider
     gainSlider.setSliderStyle (juce::Slider::LinearBarVertical);
     gainSlider.setRange (0.0, 5.0, 0.01); // Min, Max, Step Size
     gainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 90, 0);
-    gainSlider.setValue (0.5);
+    gain = 0.5;
+    gainSlider.setValue (gain);
  
     // 2. Add it to the window (Make it visible)
     addAndMakeVisible (gainSlider);
@@ -33,60 +36,12 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     };
 
 
-    delaySlider.setSliderStyle (juce::Slider::LinearBarVertical);
-    delaySlider.setRange (0.0, 10.0, 0.01); // Min, Max, Step Size
-    delaySlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 90, 0);
-    delaySlider.setValue (0.5);
- 
-    // 2. Add it to the window (Make it visible)
-    addAndMakeVisible (delaySlider);
-
-    // 3. THE CONNECTION (The Magic Wire)
-    // "When the slider moves, update the processor's rawVolume variable"
-    delaySlider.onValueChange = [this] 
-    { 
-        processorRef.delayTime.store(delaySlider.getValue(), std::memory_order_relaxed); 
-    };
-
-
-    //lets configure the button now
-    aButton.setButtonText("i am a button");
-    aButton.setToggleable(true);
-    aButton.setClickingTogglesState(true);
-
-    aButton.onClick = [this]
-    {
-        processorRef.distort.store(aButton.getToggleState(), std::memory_order_relaxed);
-    };
-
-    //add it to the window
-    addAndMakeVisible (aButton);
-
-    pad1Button.setButtonText("Drum 1");
-    pad1Button.onClick = [this]
-    {
-    };
-    addAndMakeVisible (pad1Button);
-
-
-    pad2Button.setButtonText("Drum 2");
-    pad2Button.onClick = [this]
-    {
-    };
-    addAndMakeVisible (pad2Button);
-
-
-    pad3Button.setButtonText("Drum 3");
-    pad3Button.onClick = [this]
-    {
-    };
-    addAndMakeVisible (pad3Button);
-
-
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (900, 300);
     // TRANSLATION: "Set the window width to 400 pixels and height to 300 pixels."
+    //
+    startTimerHz(30);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -105,10 +60,12 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
     // TRANSLATION: "Artist (g), please paint the ENTIRE window (fillAll) with a specific color."
     // "Look up the standard 'Background Color' from the JUCE theme manager (LookAndFeel)."
 
-    g.setColour (juce::Colours::white);
+    g.setColour (juce::Colours::red);
     // TRANSLATION: "Artist (g), put down the paint roller and pick up a White Pen."
-
-
+    
+    juce::Rectangle<int> r(80, 30, 300, getHeight()-60);
+    double end = processorRef.thumb.getTotalLength();
+    processorRef.thumb.drawChannels(g, r, 0, end, 1);
 }
 
 void AudioPluginAudioProcessorEditor::resized()
@@ -118,9 +75,12 @@ void AudioPluginAudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     gainSlider.setBounds (40, 30, 20, getHeight() - 60);
-    delaySlider.setBounds (80, 30, 20, getHeight() - 60);
-    aButton.setBounds (140, 30, 50, getHeight()-60);
-    pad1Button.setBounds (330, 30, 80, getHeight()-60);
-    pad2Button.setBounds (430, 30, 80, getHeight()-60);
-    pad3Button.setBounds (530, 30, 80, getHeight()-60);
+}
+
+
+void AudioPluginAudioProcessorEditor::timerCallback(){
+    gainSlider.setValue(gain);
+    gain = std::fmod(gain+0.1, 5);
+
+    repaint();
 }
