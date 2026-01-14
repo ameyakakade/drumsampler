@@ -25,25 +25,39 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                         // TRANSLATION: "Also, give me a Stereo Output pair."
                      #endif
                        ),
-     tbcache(5),
-     thumb(32, formatManager, tbcache)
+     thumbnailCache(5)
 #endif
 {
     juce::File kick("~/Documents/Music/demo/kick.wav");
     juce::File snare("~/Documents/Music/demo/snare.wav");
     juce::File hat("~/Documents/Music/demo/hat.wav");
     juce::File openhat("~/Documents/Music/demo/openhat.wav");
+    juce::File b808("~/Documents/Music/demo/808.wav");
     juce::File stomp("~/Documents/Music/demo/stomp.wav");
-    juce::File b808("~/Documents/Music/demo/b808.wav");
     juce::File fx("~/Documents/Music/demo/fx.wav");
     juce::File clap("~/Documents/Music/demo/clap.wav");
 
     formatManager.registerBasicFormats();
 
-    thumb.setSource(new juce::FileInputSource(kick));
+    int no = 10;
+    int noSFT = 32;
 
     // create 10 sample pads
-    samplePool.createPads(10);
+    samplePool.createPads(no);
+
+    for(int i=0; i<no; i++){
+        thumbs.emplace_back(std::make_unique<juce::AudioThumbnail>(noSFT, formatManager, thumbnailCache));
+    }
+
+    thumbs[0]->setSource(new juce::FileInputSource(kick));
+    thumbs[1]->setSource(new juce::FileInputSource(snare));
+    thumbs[2]->setSource(new juce::FileInputSource(hat));
+    thumbs[3]->setSource(new juce::FileInputSource(openhat));
+    thumbs[4]->setSource(new juce::FileInputSource(b808));
+    thumbs[5]->setSource(new juce::FileInputSource(stomp));
+    thumbs[6]->setSource(new juce::FileInputSource(fx));
+    thumbs[7]->setSource(new juce::FileInputSource(clap));
+
     // add files to first 3
     samplePool.updatePadFile(0, kick, formatManager);
     samplePool.updatePadFile(1, snare, formatManager);

@@ -62,10 +62,9 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::red);
     // TRANSLATION: "Artist (g), put down the paint roller and pick up a White Pen."
-    
-    juce::Rectangle<int> r(80, 30, 300, getHeight()-60);
-    double end = processorRef.thumb.getTotalLength();
-    processorRef.thumb.drawChannels(g, r, 0, end, 1);
+    juce::Rectangle<int> rect(50, 50 ,100, 100);
+    double len = processorRef.thumbs[0]->getTotalLength();
+    processorRef.thumbs[0]->drawChannels(g, rect, 0, len, 1);
 }
 
 void AudioPluginAudioProcessorEditor::resized()

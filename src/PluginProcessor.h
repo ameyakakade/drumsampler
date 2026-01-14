@@ -56,14 +56,12 @@ public:
     std::atomic<float> raw_vol = {1.0f};
     std::atomic<float> delayTime = {1.0f};
     std::atomic<bool> distort = {false}; 
-    
-
 
     samplePadManager samplePool;
-    juce::AudioThumbnailCache tbcache;
-    juce::AudioThumbnail thumb;
     voiceManager pool;
 
+    std::vector<std::unique_ptr<juce::AudioThumbnail>> thumbs;
+    juce::AudioThumbnailCache thumbnailCache;
 
 private:
     int playPosition = 0;
@@ -72,3 +70,4 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };
+

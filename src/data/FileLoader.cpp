@@ -1,4 +1,3 @@
-#include <juce_audio_formats/juce_audio_formats.h>
 #include "FileLoader.h"
 #include "../dsp/Voices.h"
 
@@ -60,8 +59,9 @@ void samplePadManager::createPads(int no){
 }
 
 
-void samplePadManager::updatePadFile(int id, juce::File& inputFile, juce::AudioFormatManager& formatManager){
+juce::File& samplePadManager::updatePadFile(int id, juce::File& inputFile, juce::AudioFormatManager& formatManager){
     pads[id]->updateFile(inputFile, formatManager);
+    return inputFile;
 }
 
 
