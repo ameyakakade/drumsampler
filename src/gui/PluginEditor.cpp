@@ -38,7 +38,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (900, 300);
+    setSize (800, 390);
     // TRANSLATION: "Set the window width to 400 pixels and height to 300 pixels."
     //
     startTimerHz(30);
@@ -59,12 +59,20 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
     // TRANSLATION: "Artist (g), please paint the ENTIRE window (fillAll) with a specific color."
     // "Look up the standard 'Background Color' from the JUCE theme manager (LookAndFeel)."
-
-    g.setColour (juce::Colours::red);
+    g.setColour (juce::Colours::cyan);
     // TRANSLATION: "Artist (g), put down the paint roller and pick up a White Pen."
-    juce::Rectangle<int> rect(50, 50 ,100, 100);
-    double len = processorRef.thumbs[0]->getTotalLength();
-    processorRef.thumbs[0]->drawChannels(g, rect, 0, len, 1);
+
+    int x = 80;
+    int y = 30;
+    for(auto& thumb : processorRef.thumbs){
+        double len = thumb->getTotalLength();
+        juce::Rectangle<int> rect(x, y ,150, 150);
+        thumb->drawChannels(g, rect, 0, len, 1);
+        x += 180;
+        if(x > 620){
+            y += 180; x = 80;
+        }
+    }
 }
 
 void AudioPluginAudioProcessorEditor::resized()
@@ -73,13 +81,23 @@ void AudioPluginAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     
-    gainSlider.setBounds (40, 30, 20, getHeight() - 60);
+    gainSlider.setBounds (30, 30, 20, getHeight() - 60);
 }
 
 
 void AudioPluginAudioProcessorEditor::timerCallback(){
     gainSlider.setValue(gain);
     gain = std::fmod(gain+0.1, 5);
+    
+    for(int t=0; t<30; t++){
+        if(processorRef.pool.states[t]->state.load(std::memory_order_relaxed)){
+            DBG(processorRef.pool.states[t]->length.load(std::memory_order_relaxed));
+            DBG(processorRef.pool.states[t]->position.load(std::memory_order_relaxed));
+            DBG(processorRef.pool.states[t]->id.load(std::memory_order_relaxed));
+            DBG("-----");
+        }
+    }
 
+    DBG("*****");
     repaint();
 }

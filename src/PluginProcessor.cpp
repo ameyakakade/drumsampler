@@ -202,11 +202,9 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             int note = msg.getNoteNumber();    
             DBG(note);
             float v = msg.getFloatVelocity();
-            auto pair = samplePool.getFileByMidiNote(note);
-            auto* file = pair.first;
-            double sRate = pair.second;
-            if(file){
-                pool.assignVoice(*file, note, v, sRate, currentSampleRate);
+            auto data = samplePool.getFileByMidiNote(note);
+            if(data->file){
+                pool.assignVoice(*data->file, data->id, note, v, data->sampleRate, currentSampleRate);
             }else{
                 DBG("Note not found");
             }

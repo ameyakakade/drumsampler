@@ -65,11 +65,13 @@ juce::File& samplePadManager::updatePadFile(int id, juce::File& inputFile, juce:
 }
 
 
-std::pair<juce::AudioBuffer<float>*, double> samplePadManager::getFileByMidiNote(int note){
-    std::pair<juce::AudioBuffer<float>*, double> res{nullptr, 0};
+std::unique_ptr<padData> samplePadManager::getFileByMidiNote(int note){
+    std::unique_ptr<padData> res = std::make_unique<padData>();
     for(auto& pad : pads){
         if(pad->midiNote == note){
-            res = {pad->getFile(), pad->sampleRate};
+            res->file = pad->getFile();
+            res->sampleRate = pad->sampleRate;
+            res->id = pad->id;
             return res;
         }
     }

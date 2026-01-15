@@ -1,18 +1,20 @@
 #include "Voices.h"
 #include <juce_audio_formats/juce_audio_formats.h>
 
+
 voice::voice(){
     active = false;
     playHead = 0;
 }
 
-void voice::startVoice(juce::AudioBuffer<float>& buffer, int midiNote, float vel, double sRate, double bufferSRate){
+void voice::startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float vel, double sRate, double bufferSRate){
     active = true;
     numSamples = buffer.getNumSamples();
     numChannels = buffer.getNumChannels();
     playHead = 0;
     assignedBuffer = &buffer;
     setMidiNote = midiNote;
+    padID = padNo;
     velocity = vel;
     playRatio = sRate/bufferSRate; 
     DBG("playratio" << playRatio);
@@ -40,7 +42,7 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
         
     }
 
-    playHead += noOfSamples*playRatio;
+    playHead = playHead + noOfSamples*playRatio;
 
     if(playHead+1>=numSamples){
         playHead = numSamples;
@@ -51,33 +53,46 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
 }
 
 
-
 void voiceManager::prepare(int num){ 
 
     voices.reserve(num);
+    states.reserve(num);
     numVoices = num;
     for(int i = 0; i<num; i++){
         voices.emplace_back(std::make_unique<voice>());
+        states.emplace_back(std::make_unique<voiceData>());
     }
-    //DBG("added voices:"<<num);
 
 }
 
 void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample){
-    for(auto& voice : voices){
+    for(int i=0; i<numVoices; i++){
+        auto& voice = voices[i];
+        updateState(i, voice->active, -1, -1, endSample, -1);
         if(voice->active){
             voice->renderAudio(buffer, startSample, endSample);
         }
     }
 }
 
-void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int midiNote, float velocity, double sRate, double bufferSRate){
+void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate){
     for(int i = 0; i<numVoices; i++){
         if(!voices[i]->active){
-            voices[i]->startVoice(buffer, midiNote, velocity, sRate, bufferSRate);
+            voices[i]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate);
+            updateState(i, true, buffer.getNumSamples()*sRate/bufferSRate, 0, -1, padNo);
             DBG("assigned at"<<i);
             break;
         }
     }
 }
 
+void voiceManager::updateState(int i, bool state, int length, int pos, int posAdd, int ID){
+    states[i]->state.store(state, std::memory_order_relaxed);
+    if(length!=-1) states[i]->length.store(length, std::memory_order_relaxed);
+    if(pos!=-1) states[i]->position.store(pos, std::memory_order_relaxed);
+    if(posAdd!=-1){
+        int posi = states[i]->position.load(std::memory_order_relaxed);
+        states[i]->position.store(posAdd+posi, std::memory_order_relaxed);
+    }
+    if(ID!=-1) states[i]->id.store(ID, std::memory_order_relaxed);
+}
