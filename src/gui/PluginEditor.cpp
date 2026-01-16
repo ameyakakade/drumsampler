@@ -17,6 +17,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // I know I haven't touched it yet, just ignore it."
 
     minLength = 1024*4; //minimum length for playhead to be drawn
+    decayRate = 0.9f;
+    flashes.resize(30);
 
     int x = 80;
     int y = 30;
@@ -52,7 +54,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     setSize (800, 390);
     // TRANSLATION: "Set the window width to 400 pixels and height to 300 pixels."
     //
-    startTimerHz(30);
+    startTimerHz(60);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -79,23 +81,42 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
         thumb->drawChannels(g, rect, 0, thumb->getTotalLength(), 1);
     }
 
-    g.setColour (juce::Colours::red);
 
     for(int t=0; t<30; t++){
         if(processorRef.pool.states[t]->state.load(std::memory_order_relaxed)){
             int len = processorRef.pool.states[t]->length.load(std::memory_order_relaxed);
             int posi = processorRef.pool.states[t]->position.load(std::memory_order_relaxed);
             int id = processorRef.pool.states[t]->id.load(std::memory_order_relaxed);
+            
+
+            flashes[t].first = true;
+
+            g.setColour (juce::Colours::red);
+
             if(len>minLength){
                 float offset = (float)posi/(float)len*150.0f;
-                DBG("offset"<<offset<<len<<posi);
                 int x = rects[id].getX();
                 int y = rects[id].getY();
                 g.drawLine(x + offset, y, x + offset, y + 150, 3);
             }
         }
+        if(flashes[t].first){
+            int id = processorRef.pool.states[t]->id.load(std::memory_order_relaxed);
+            g.setColour (juce::Colours::cyan);
+            g.setOpacity(flashes[t].second);
+            g.fillRect(rects[id]);
+            flashes[t].second *= decayRate;
+            g.setOpacity(0.8);
+            if(flashes[t].second<0.10){
+                flashes[t].first = false;
+            }
+        }else{
+            flashes[t].second = 0.8;
+        }
+
     }
 
+    g.setOpacity(1);
 }
 
 void AudioPluginAudioProcessorEditor::resized()
