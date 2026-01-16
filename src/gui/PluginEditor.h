@@ -63,6 +63,9 @@ private:
 
     juce::Slider gainSlider; 
     double gain;
+    int minLength;
+
+    std::vector<juce::Rectangle<int>> rects;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
     // TRANSLATION: "This is a Magic Macro (a shortcut)."

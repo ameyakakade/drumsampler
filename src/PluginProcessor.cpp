@@ -39,7 +39,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 
     formatManager.registerBasicFormats();
 
-    int no = 10;
+    int no = 8;
     int noSFT = 32;
 
     // create 10 sample pads
@@ -53,8 +53,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     thumbs[1]->setSource(new juce::FileInputSource(snare));
     thumbs[2]->setSource(new juce::FileInputSource(hat));
     thumbs[3]->setSource(new juce::FileInputSource(openhat));
-    thumbs[4]->setSource(new juce::FileInputSource(b808));
-    thumbs[5]->setSource(new juce::FileInputSource(stomp));
+    thumbs[4]->setSource(new juce::FileInputSource(stomp));
+    thumbs[5]->setSource(new juce::FileInputSource(b808));
     thumbs[6]->setSource(new juce::FileInputSource(fx));
     thumbs[7]->setSource(new juce::FileInputSource(clap));
 

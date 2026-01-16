@@ -12,7 +12,7 @@ struct padData{
         file = nullptr;
         sampleRate = 0;
         id = 0;
-    };
+    }
     padData(juce::AudioBuffer<float>* f, double sRate, int padid){
         file = f;
         sampleRate = sRate;

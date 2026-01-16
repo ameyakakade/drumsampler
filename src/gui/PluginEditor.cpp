@@ -16,7 +16,18 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // TRANSLATION: "Hey Compiler, don't yell at me (Warning) for not using 'processorRef' in this function. 
     // I know I haven't touched it yet, just ignore it."
 
+    minLength = 1024*4; //minimum length for playhead to be drawn
 
+    int x = 80;
+    int y = 30;
+    for(int i=0; i<8; i++){
+        juce::Rectangle<int> rect(x, y ,150, 150);
+        rects.push_back(rect);
+        x += 180;
+        if(x > 620){
+            y += 180; x = 80;
+        }
+    }
 
 // 1. Configure the Slider
     gainSlider.setSliderStyle (juce::Slider::LinearBarVertical);
@@ -56,23 +67,35 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 // this g is passed by the os when it calls the paint fn
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll (juce::Colours::black);
     // TRANSLATION: "Artist (g), please paint the ENTIRE window (fillAll) with a specific color."
     // "Look up the standard 'Background Color' from the JUCE theme manager (LookAndFeel)."
     g.setColour (juce::Colours::cyan);
     // TRANSLATION: "Artist (g), put down the paint roller and pick up a White Pen."
 
-    int x = 80;
-    int y = 30;
-    for(auto& thumb : processorRef.thumbs){
-        double len = thumb->getTotalLength();
-        juce::Rectangle<int> rect(x, y ,150, 150);
-        thumb->drawChannels(g, rect, 0, len, 1);
-        x += 180;
-        if(x > 620){
-            y += 180; x = 80;
+    for(int i=0; i<8; i++){
+        auto& thumb = processorRef.thumbs[i];
+        juce::Rectangle<int> rect = rects[i];
+        thumb->drawChannels(g, rect, 0, thumb->getTotalLength(), 1);
+    }
+
+    g.setColour (juce::Colours::red);
+
+    for(int t=0; t<30; t++){
+        if(processorRef.pool.states[t]->state.load(std::memory_order_relaxed)){
+            int len = processorRef.pool.states[t]->length.load(std::memory_order_relaxed);
+            int posi = processorRef.pool.states[t]->position.load(std::memory_order_relaxed);
+            int id = processorRef.pool.states[t]->id.load(std::memory_order_relaxed);
+            if(len>minLength){
+                float offset = (float)posi/(float)len*150.0f;
+                DBG("offset"<<offset<<len<<posi);
+                int x = rects[id].getX();
+                int y = rects[id].getY();
+                g.drawLine(x + offset, y, x + offset, y + 150, 3);
+            }
         }
     }
+
 }
 
 void AudioPluginAudioProcessorEditor::resized()
@@ -88,16 +111,5 @@ void AudioPluginAudioProcessorEditor::resized()
 void AudioPluginAudioProcessorEditor::timerCallback(){
     gainSlider.setValue(gain);
     gain = std::fmod(gain+0.1, 5);
-    
-    for(int t=0; t<30; t++){
-        if(processorRef.pool.states[t]->state.load(std::memory_order_relaxed)){
-            DBG(processorRef.pool.states[t]->length.load(std::memory_order_relaxed));
-            DBG(processorRef.pool.states[t]->position.load(std::memory_order_relaxed));
-            DBG(processorRef.pool.states[t]->id.load(std::memory_order_relaxed));
-            DBG("-----");
-        }
-    }
-
-    DBG("*****");
     repaint();
 }
