@@ -50,6 +50,12 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
     }
 }
 
+void voice::quitVoice(){
+    active = false;
+    playHead = 0;
+    assignedBuffer = NULL;
+    playRatio = 1;
+}
 
 void voiceManager::prepare(int num){ 
 
@@ -92,4 +98,8 @@ void voiceManager::updateState(int i, bool state, int length, int pos, int posAd
         states[i]->position.store(posAdd+posi, std::memory_order_relaxed);
     }
     if(ID!=-1) states[i]->id.store(ID, std::memory_order_relaxed);
+}
+
+void voiceManager::quitByPad(int id){
+    for(auto& voice : voices) if(voice->padID == id) voice->quitVoice();
 }

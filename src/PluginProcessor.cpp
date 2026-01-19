@@ -28,21 +28,12 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
      thumbnailCache(5)
 #endif
 {
-    juce::File kick("~/Documents/Music/demo/kick.wav");
-    juce::File snare("~/Documents/Music/demo/snare.wav");
-    juce::File hat("~/Documents/Music/demo/hat.wav");
-    juce::File openhat("~/Documents/Music/demo/openhat.wav");
-    juce::File b808("~/Documents/Music/demo/808.wav");
-    juce::File stomp("~/Documents/Music/demo/stomp.wav");
-    juce::File fx("~/Documents/Music/demo/fx.wav");
-    juce::File clap("~/Documents/Music/demo/clap.wav");
 
     formatManager.registerBasicFormats();
 
     int no = 8;
     int noSFT = 32;
 
-    // create 10 sample pads
     samplePool.createPads(no);
 
     for(int i=0; i<no; i++){
@@ -50,24 +41,15 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         padStates.emplace_back(std::make_unique<std::atomic<bool>>());
     }
 
-    thumbs[0]->setSource(new juce::FileInputSource(kick));
-    thumbs[1]->setSource(new juce::FileInputSource(snare));
-    thumbs[2]->setSource(new juce::FileInputSource(hat));
-    thumbs[3]->setSource(new juce::FileInputSource(openhat));
-    thumbs[4]->setSource(new juce::FileInputSource(stomp));
-    thumbs[5]->setSource(new juce::FileInputSource(b808));
-    thumbs[6]->setSource(new juce::FileInputSource(fx));
-    thumbs[7]->setSource(new juce::FileInputSource(clap));
+    updateFile("~/Documents/Music/demo/kick.wav", 0);
+    updateFile("~/Documents/Music/demo/snare.wav", 1);
+    updateFile("~/Documents/Music/demo/hat.wav", 2);
+    updateFile("~/Documents/Music/demo/openhat.wav", 3);
+    updateFile("~/Documents/Music/demo/808.wav", 4);
+    updateFile("~/Documents/Music/demo/stomp.wav", 5);
+    updateFile("~/Documents/Music/demo/fx.wav", 6);
+    updateFile("~/Documents/Music/demo/clap.wav", 7);
 
-    // add files to first 3
-    samplePool.updatePadFile(0, kick, formatManager);
-    samplePool.updatePadFile(1, snare, formatManager);
-    samplePool.updatePadFile(2, hat, formatManager);
-    samplePool.updatePadFile(3, openhat, formatManager);
-    samplePool.updatePadFile(4, stomp, formatManager);
-    samplePool.updatePadFile(5, b808, formatManager);
-    samplePool.updatePadFile(6, fx, formatManager);
-    samplePool.updatePadFile(7, clap, formatManager);
     pool.prepare(30);
 }
 
@@ -219,6 +201,15 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
 }
 
+void AudioPluginAudioProcessor::updateFile(std::string add, int id){
+    juce::File file(add);
+    pool.quitByPad(id);
+    samplePool.updatePadFile(id, file, formatManager);
+    thumbs[id]->setSource(new juce::FileInputSource(file));
+
+}
+
+
 //==============================================================================
 bool AudioPluginAudioProcessor::hasEditor() const
 {
@@ -256,5 +247,4 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     // "Here is a new instance of my Processor."
     return new AudioPluginAudioProcessor();
 }
-
 

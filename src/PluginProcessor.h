@@ -64,6 +64,8 @@ public:
     juce::AudioThumbnailCache thumbnailCache;
     std::vector<std::unique_ptr<std::atomic<bool>>> padStates;
 
+    void updateFile(std::string add, int id);
+
 private:
     int playPosition = 0;
     double currentSampleRate;

@@ -79,9 +79,11 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
             g.setColour (juce::Colours::red);
             if(len>minLength){
                 float offset = (float)posi/(float)len*150.0f;
-                int x = rects[id].getX();
-                int y = rects[id].getY();
-                g.drawLine(x + offset, y, x + offset, y + 150, 3);
+                if(offset<150){
+                    int x = rects[id].getX();
+                    int y = rects[id].getY();
+                    g.drawLine(x + offset, y, x + offset, y + 150, 2);
+                } 
             }
         }
     }
@@ -147,5 +149,17 @@ void AudioPluginAudioProcessorEditor::fileDragExit(const juce::StringArray &file
 }
 
 void AudioPluginAudioProcessorEditor::filesDropped(const juce::StringArray &files, int x, int y){
-
+    highX = -1;
+    highY = -1;
+    int id = -1;
+    std::string path = files[0].toStdString();
+    for(int i=0; i<8; i++){
+        auto& rect = rects[i];
+        int rx = rect.getX();
+        int ry = rect.getY();
+        int h = rect.getHeight();
+        int w = rect.getWidth();
+        if((x-rx<w) and (y-ry<h) and (x-rx>0) and (y-ry>0)) id = i;
+    }
+    if(id!=-1) processorRef.updateFile(path, id);
 }

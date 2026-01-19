@@ -19,6 +19,7 @@ class voice{
         voice();
         void startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float vel, double sRate, double bufferSRate);
         void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
+        void quitVoice();
 };
 
 struct voiceData{
@@ -46,5 +47,6 @@ class voiceManager{
         void assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate);
 
         void updateState(int i, bool state, int length, int pos, int posAdd, int ID);
+        void quitByPad(int id);
 };
 
