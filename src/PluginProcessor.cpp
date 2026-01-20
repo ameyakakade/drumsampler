@@ -4,8 +4,13 @@
 #include "data/FileLoader.h"
 #include <queue>
 #include <algorithm>
+#include <random>
 
-
+//helper fn to create parameters
+juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(){
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    return layout; 
+}
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -25,30 +30,23 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                         // TRANSLATION: "Also, give me a Stereo Output pair."
                      #endif
                        ),
+     states(*this, nullptr, "parameters", createParameterLayout()),
      thumbnailCache(5)
+
 #endif
 {
 
     formatManager.registerBasicFormats();
 
-    int no = 8;
+    noOfPads = 8;
     int noSFT = 32;
 
-    samplePool.createPads(no);
+    samplePool.createPads(noOfPads);
 
-    for(int i=0; i<no; i++){
+    for(int i=0; i<noOfPads; i++){
         thumbs.emplace_back(std::make_unique<juce::AudioThumbnail>(noSFT, formatManager, thumbnailCache));
         padStates.emplace_back(std::make_unique<std::atomic<bool>>());
     }
-
-    updateFile("~/Documents/Music/demo/kick.wav", 0);
-    updateFile("~/Documents/Music/demo/snare.wav", 1);
-    updateFile("~/Documents/Music/demo/hat.wav", 2);
-    updateFile("~/Documents/Music/demo/openhat.wav", 3);
-    updateFile("~/Documents/Music/demo/808.wav", 4);
-    updateFile("~/Documents/Music/demo/stomp.wav", 5);
-    updateFile("~/Documents/Music/demo/fx.wav", 6);
-    updateFile("~/Documents/Music/demo/clap.wav", 7);
 
     pool.prepare(30);
 }
@@ -201,7 +199,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
 }
 
-void AudioPluginAudioProcessor::updateFile(std::string add, int id){
+void AudioPluginAudioProcessor::updateFile(juce::String add, int id){
     juce::File file(add);
     pool.quitByPad(id);
     samplePool.updatePadFile(id, file, formatManager);
@@ -225,18 +223,28 @@ juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
-    // TRANSLATION: "SAVE STATE. The user hit Ctrl+S."
-    // "Convert all knob positions into binary data and store it in destData."
-    juce::ignoreUnused (destData);
+void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData){
+    auto& tree = states.state;
+    for(int i=0; i<noOfPads; i++){
+        juce::String name = "pad_" + std::to_string(i) + "_path_";
+        juce::String path = samplePool.pads[i]->filePath;
+        tree.setProperty(name, path, nullptr);
+    }
+
+    auto state = states.copyState();
+    std::unique_ptr<juce::XmlElement> data = state.createXml();
+    copyXmlToBinary(*data, destData);
 }
 
-void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-    // TRANSLATION: "LOAD STATE. The user loaded a project."
-    // "Read the binary data and move the knobs back to where they were."
-    juce::ignoreUnused (data, sizeInBytes);
+void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes){
+    std::unique_ptr<juce::XmlElement> pdata = getXmlFromBinary(data, sizeInBytes);
+    juce::ValueTree tree = juce::ValueTree::fromXml(*pdata);
+    for(int i=0; i<noOfPads; i++){
+        juce::String name = "pad_" + std::to_string(i) + "_path_";
+        juce::String path = tree.getProperty(name); 
+        updateFile(path, i);
+    }
+    states.replaceState(tree);
 }
 
 //==============================================================================

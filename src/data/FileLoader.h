@@ -33,6 +33,7 @@ class samplePad{
         juce::AudioBuffer<float>* getFile();
         void updateFile(juce::File& file, juce::AudioFormatManager& formatManager);
         double sampleRate;
+        juce::String filePath;
 };
 
 class samplePadManager{

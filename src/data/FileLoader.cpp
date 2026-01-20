@@ -34,6 +34,7 @@ samplePad::samplePad() : id(nextid++){
 }
 
 void samplePad::updateFile(juce::File& file, juce::AudioFormatManager& formatManager){
+    filePath = file.getFullPathName();
     sampleRate = convertFileIntoBuffer(file, sample, formatManager);
     DBG("sample rate:" << sampleRate);
 }

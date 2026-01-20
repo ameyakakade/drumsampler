@@ -52,6 +52,7 @@ public:
     void startPlayback(int id);
 
     juce::AudioFormatManager formatManager;
+    juce::AudioProcessorValueTreeState states;
 
     std::atomic<float> raw_vol = {1.0f};
     std::atomic<float> delayTime = {1.0f};
@@ -64,11 +65,12 @@ public:
     juce::AudioThumbnailCache thumbnailCache;
     std::vector<std::unique_ptr<std::atomic<bool>>> padStates;
 
-    void updateFile(std::string add, int id);
+    void updateFile(juce::String add, int id);
 
 private:
     int playPosition = 0;
     double currentSampleRate;
+    int noOfPads;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)

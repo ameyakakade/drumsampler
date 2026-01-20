@@ -8,7 +8,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     juce::ignoreUnused (processorRef);
 
     minLength = 1024*4; //minimum length for playhead to be drawn
-    decayRate = 0.9f;
+    decayRate = 0.7f;
     flashes.resize(8);
 
     int x = 80;
@@ -80,12 +80,14 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
             if(len>minLength){
                 float offset = (float)posi/(float)len*150.0f;
                 if(offset<150){
+                    g.setOpacity(1-(offset/300.0));
                     int x = rects[id].getX();
                     int y = rects[id].getY();
                     g.drawLine(x + offset, y, x + offset, y + 150, 2);
                 } 
             }
         }
+        g.setOpacity(1);
     }
 
     for(int i=0; i<flashes.size(); i++){
