@@ -24,12 +24,10 @@ struct padData{
 class samplePad{
     private:
         juce::AudioBuffer<float> sample;
-        static int nextid;
 
     public:
         int midiNote;
-        const int id;
-        samplePad();
+        int id;
         juce::AudioBuffer<float>* getFile();
         void updateFile(juce::File& file, juce::AudioFormatManager& formatManager);
         double sampleRate;

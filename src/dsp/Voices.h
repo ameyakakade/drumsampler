@@ -13,6 +13,7 @@ class voice{
         int setMidiNote;
         int padID;
         float velocity;
+        int age;
 
         juce::AudioBuffer<float>* assignedBuffer;
 

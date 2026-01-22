@@ -9,6 +9,13 @@
 //helper fn to create parameters
 juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(){
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    for(int i=0; i<8; i++){
+        //juce::String name = "Pad" + std::to_string(i);
+        //std::unique_ptr<juce::AudioProcessorParameterGroup> group = std::make_unique<juce::AudioProcessorParameterGroup> (name, name, "and");
+        //group->addChild(std::make_unique<juce::AudioParameterInt> ("b", "Parameter B", 0, 5, 2));
+        //layout.add(std::make_unique<juce::AudioParameterInt> ("b", "ParameterB", 0, 5, 2));
+        //layout.add(std::move(group));
+    }
     return layout; 
 }
 
@@ -181,14 +188,12 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         int time = metadata.samplePosition;
         if(msg.isNoteOn()){
             int note = msg.getNoteNumber();    
-            DBG(note);
             float v = msg.getFloatVelocity();
             auto data = samplePool.getFileByMidiNote(note);
             if(data->file){
                 pool.assignVoice(*data->file, data->id, note, v, data->sampleRate, currentSampleRate);
-            }else{
+                padStates[data->id]->store(true, std::memory_order_relaxed);
             }
-            padStates[data->id]->store(true, std::memory_order_relaxed);
         }
         if(msg.isNoteOff()){
         }
@@ -233,18 +238,21 @@ void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData
 
     auto state = states.copyState();
     std::unique_ptr<juce::XmlElement> data = state.createXml();
-    copyXmlToBinary(*data, destData);
+    if(data) copyXmlToBinary(*data, destData);
 }
 
 void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes){
     std::unique_ptr<juce::XmlElement> pdata = getXmlFromBinary(data, sizeInBytes);
-    juce::ValueTree tree = juce::ValueTree::fromXml(*pdata);
-    for(int i=0; i<noOfPads; i++){
-        juce::String name = "pad_" + std::to_string(i) + "_path_";
-        juce::String path = tree.getProperty(name); 
-        updateFile(path, i);
+    DBG("XML:" << pdata->toString());
+    if(pdata){
+        juce::ValueTree tree = juce::ValueTree::fromXml(*pdata);
+        for(int i=0; i<noOfPads; i++){
+            juce::String name = "pad_" + std::to_string(i) + "_path_";
+            juce::String path = tree.getProperty(name); 
+            updateFile(path, i);
+        }
+        states.replaceState(tree);
     }
-    states.replaceState(tree);
 }
 
 //==============================================================================
