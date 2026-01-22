@@ -65,6 +65,11 @@ public:
     juce::AudioThumbnailCache thumbnailCache;
     std::vector<std::unique_ptr<std::atomic<bool>>> padStates;
 
+    std::vector<std::atomic<float>*> gain;
+    std::vector<std::atomic<float>*> pitch;
+
+    void fillPointerArray(std::vector<std::atomic<float>*>& arr, std::string idtag, int idrange);
+
     void updateFile(juce::String add, int id);
 
 private:

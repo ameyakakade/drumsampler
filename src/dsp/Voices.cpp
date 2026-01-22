@@ -38,7 +38,7 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
             if(playHeadNow+1>=numSamples) break;
             int y = int(playHeadNow);
             float f = playHeadNow - y;
-            channelData[i] += sourceData[y]*(1-f) + sourceData[y+1]*f;
+            channelData[i] += (sourceData[y]*(1-f) + sourceData[y+1]*f)*velocity;
             playHeadNow += playRatio;
         }
         

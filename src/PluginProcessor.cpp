@@ -10,11 +10,12 @@
 juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(){
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     for(int i=0; i<8; i++){
-        //juce::String name = "Pad" + std::to_string(i);
-        //std::unique_ptr<juce::AudioProcessorParameterGroup> group = std::make_unique<juce::AudioProcessorParameterGroup> (name, name, "and");
-        //group->addChild(std::make_unique<juce::AudioParameterInt> ("b", "Parameter B", 0, 5, 2));
-        //layout.add(std::make_unique<juce::AudioParameterInt> ("b", "ParameterB", 0, 5, 2));
-        //layout.add(std::move(group));
+        juce::String name = "Pad" + std::to_string(i);
+        std::string id = std::to_string(i);
+        std::unique_ptr<juce::AudioProcessorParameterGroup> group = std::make_unique<juce::AudioProcessorParameterGroup> (name, name, "and");
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"Gain" + id, 1}, "Gain " + id, 0, 1, 1));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"Pitch" + id, 1}, "Pitch " + id, 0.1, 3, 1));
+        layout.add(std::move(group));
     }
     return layout; 
 }
@@ -56,6 +57,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     }
 
     pool.prepare(30);
+
+    fillPointerArray(gain, "Gain", 8);
+    fillPointerArray(pitch, "Pitch", 8);
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -188,10 +192,13 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         int time = metadata.samplePosition;
         if(msg.isNoteOn()){
             int note = msg.getNoteNumber();    
-            float v = msg.getFloatVelocity();
             auto data = samplePool.getFileByMidiNote(note);
+            float pgain = gain[data->id]->load(std::memory_order_relaxed);
+            float ppitch = pitch[data->id]->load(std::memory_order_relaxed);
+            float v = msg.getFloatVelocity()*pgain;
+            DBG(v);
             if(data->file){
-                pool.assignVoice(*data->file, data->id, note, v, data->sampleRate, currentSampleRate);
+                pool.assignVoice(*data->file, data->id, note, v, data->sampleRate*ppitch, currentSampleRate);
                 padStates[data->id]->store(true, std::memory_order_relaxed);
             }
         }
@@ -252,6 +259,15 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
             updateFile(path, i);
         }
         states.replaceState(tree);
+    }
+}
+
+// function to get values from tree and store pointers to them
+void AudioPluginAudioProcessor::fillPointerArray(std::vector<std::atomic<float>*>& arr, std::string idtag, int idrange){
+    for(int i=0; i<idrange; i++){
+        std::string id = idtag + std::to_string(i);
+        std::atomic<float>* pointer = states.getRawParameterValue(id);
+        arr.push_back(pointer);
     }
 }
 
