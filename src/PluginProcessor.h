@@ -57,6 +57,7 @@ public:
     std::atomic<float> raw_vol = {1.0f};
     std::atomic<float> delayTime = {1.0f};
     std::atomic<bool> distort = {false}; 
+    std::atomic<float> globalPitch = {1.0};
 
     samplePadManager samplePool;
     voiceManager pool;
@@ -84,4 +85,5 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };
+
 

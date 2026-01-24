@@ -21,10 +21,11 @@ void voice::startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote
     age = 0;
 }
 
-void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample){
+void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample, float p){
 
     int numBufferChannels = buffer.getNumChannels();
     int noOfSamples = endSample - startSample;
+    float playRatioNow = playRatio*p;
     age++;
 
     for(int ch = 0; ch<numBufferChannels && ch<numChannels; ch++){
@@ -39,12 +40,12 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
             int y = int(playHeadNow);
             float f = playHeadNow - y;
             channelData[i] += (sourceData[y]*(1-f) + sourceData[y+1]*f)*velocity;
-            playHeadNow += playRatio;
+            playHeadNow += playRatioNow;
         }
         
     }
 
-    playHead = playHead + noOfSamples*playRatio;
+    playHead = playHead + noOfSamples*playRatioNow;
 
     if(playHead+1>=numSamples){
         playHead = numSamples;
@@ -74,12 +75,12 @@ void voiceManager::prepare(int num){
 
 }
 
-void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample){
+void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample, float p){
     for(int i=0; i<numVoices; i++){
         auto& voice = voices[i];
-        updateState(i, voice->active, -1, -1, (endSample-startSample)*(voice->playRatio), -1);
+        updateState(i, voice->active, -1, -1, (endSample-startSample)*(voice->playRatio)*p, -1);
         if(voice->active){
-            voice->renderAudio(buffer, startSample, endSample);
+            voice->renderAudio(buffer, startSample, endSample, p);
         }
     }
 }

@@ -19,7 +19,7 @@ class voice{
 
         voice();
         void startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float vel, double sRate, double bufferSRate);
-        void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
+        void renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int endSample, float p);
         void quitVoice();
 };
 
@@ -44,7 +44,7 @@ class voiceManager{
         std::vector<std::unique_ptr<voice>> voices;
         std::vector<std::unique_ptr<voiceData>> states;
         void prepare(int num);
-        void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
+        void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample, float p);
         void assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate);
 
         void updateState(int i, bool state, int length, int pos, int posAdd, int ID);

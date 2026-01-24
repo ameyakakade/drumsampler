@@ -192,18 +192,23 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     float d = raw_vol.load(std::memory_order_relaxed);
     bool check = distort.load(std::memory_order_relaxed);
     float sizeOfQueue = delayTime*currentSampleRate;
+    float range = 12;
+    float pbendfactor = std::pow(2, range/12.0);
     
     int head = 0;
     
     for(const auto metadata : midiMessages){
         auto msg = metadata.getMessage();
         int time = metadata.samplePosition;
+        float gpitch = globalPitch.load(std::memory_order_relaxed);
+        if(msg.isPitchWheel()) globalPitch.store(std::pow(pbendfactor, msg.getPitchWheelValue()/8192.0-1.0), std::memory_order_relaxed);
         if(msg.isNoteOn()){
             int note = msg.getNoteNumber();    
             auto data = samplePool.getFileByMidiNote(note);
             float pgain = gain[data->id]->load(std::memory_order_relaxed);
             float ppitch = pitch[data->id]->load(std::memory_order_relaxed);
-            float v = msg.getFloatVelocity()*pgain;
+            float vsens = 1.6;
+            float v = std::pow(msg.getFloatVelocity()*pgain, vsens);
             DBG(v);
             if(data->file){
                 pool.assignVoice(*data->file, data->id, note, v, data->sampleRate*ppitch, currentSampleRate);
@@ -212,10 +217,11 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
         if(msg.isNoteOff()){
         }
-        pool.renderAll(buffer, head, time);
+        pool.renderAll(buffer, head, time, gpitch);
         head = time;
     }
-    pool.renderAll(buffer, head, noOfSamples);
+    float gpitch = globalPitch.load(std::memory_order_relaxed);
+    pool.renderAll(buffer, head, noOfSamples, gpitch);
 
 }
 
