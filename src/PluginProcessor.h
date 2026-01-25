@@ -8,6 +8,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 
+
 //==============================================================================
 class AudioPluginAudioProcessor final : public juce::AudioProcessor
 {
@@ -79,6 +80,7 @@ public:
     void fillPointerArray(std::vector<std::atomic<float>*>& arr, std::string idtag, int idrange);
 
     void updateFile(juce::String add, int id);
+
 
 private:
     int playPosition = 0;

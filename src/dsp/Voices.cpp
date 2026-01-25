@@ -8,11 +8,11 @@ voice::voice(){
     age = 0;
 }
 
-void voice::startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float vel, double sRate, double bufferSRate){
+void voice::startVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float vel, double sRate, double bufferSRate, float st, float end){
     active = true;
-    numSamples = buffer.getNumSamples();
+    numSamples = buffer.getNumSamples()*end;
     numChannels = buffer.getNumChannels();
-    playHead = 0;
+    playHead = st*(buffer.getNumSamples());
     assignedBuffer = &buffer;
     setMidiNote = midiNote;
     padID = padNo;
@@ -85,21 +85,21 @@ void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, 
     }
 }
 
-void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate){
+void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate, float st, float end){
     int oldest = 0;
     bool assigned = false;
     for(int i = 0; i<numVoices; i++){
         if(voices[oldest]->age < voices[i]->age) oldest = i;
         if(!voices[i]->active){
             assigned = true;
-            voices[i]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate);
-            updateState(i, true, buffer.getNumSamples(), 0, -1, padNo);
+            voices[i]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate, st, end);
+            updateState(i, true, buffer.getNumSamples(), st*buffer.getNumSamples(), -1, padNo);
             break;
         }
     }
     if(!assigned){
-        voices[oldest]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate);
-        updateState(oldest, true, buffer.getNumSamples(), 0, -1, padNo);
+        voices[oldest]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate, st, end);
+        updateState(oldest, true, buffer.getNumSamples(), st*buffer.getNumSamples(), -1, padNo);
     }
 }
 

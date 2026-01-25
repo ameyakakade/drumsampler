@@ -50,13 +50,32 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     gainSlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
     gainSlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
  
-    addAndMakeVisible (gainSlider);
-
     pitchSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     pitchSlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
     pitchSlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
- 
+
+    startSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    startSlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
+    startSlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
+
+    endSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    endSlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
+    endSlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
+
+    attackSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    attackSlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
+    attackSlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
+
+    decaySlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    decaySlider.setRange (0.0, 1.0, 0.01); // Min, Max, Step Size
+    decaySlider.setTextBoxStyle (juce::Slider::NoTextBox, true, 120, 120);
+
+    addAndMakeVisible (gainSlider);
     addAndMakeVisible (pitchSlider);
+    addAndMakeVisible (startSlider);
+    addAndMakeVisible (endSlider);
+    addAndMakeVisible (attackSlider);
+    addAndMakeVisible (decaySlider);
 
     setSize (800, 390);
     startTimerHz(60);
@@ -124,6 +143,9 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
         int r = 40;
         g.fillEllipse(highX-(r/2), highY-(r/2), r, r);
     }
+    
+    g.setColour (juce::Colours::pink);
+    g.drawRect(rects[selectedPad.load(std::memory_order_relaxed)]);
 
     g.setOpacity(1);
 }
@@ -134,8 +156,12 @@ void AudioPluginAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     
-    gainSlider.setBounds (10, 30, 60, 60);
-    pitchSlider.setBounds (10, 90, 60, 60);
+    gainSlider.setBounds (10, 10, 60, 60);
+    pitchSlider.setBounds (10, 70, 60, 60);
+    startSlider.setBounds (10, 130, 60, 60);
+    endSlider.setBounds (10, 190, 60, 60);
+    attackSlider.setBounds (10, 250, 60, 60);
+    decaySlider.setBounds (10, 310, 60, 60);
     for(int i=0; i<8; i++){
         padButtons[i]->setBounds(rects[i]);
     }
@@ -194,10 +220,18 @@ void AudioPluginAudioProcessorEditor::updateAttachments(int selectedPadIndex){
     
     gainAttachment.reset();
     pitchAttachment.reset();
+    startAttachment.reset();
+    endAttachment.reset();
+    attackAttachment.reset();
+    decayAttachment.reset();
 
     selectedPad.store(selectedPadIndex);
     int i = selectedPad.load();
 
     gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Gain"+std::to_string(i), gainSlider); 
     pitchAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Pitch"+std::to_string(i), pitchSlider); 
+    startAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Start"+std::to_string(i), startSlider); 
+    endAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "End"+std::to_string(i), endSlider); 
+    attackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Attack"+std::to_string(i), attackSlider); 
+    decayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Decay"+std::to_string(i), decaySlider); 
 }

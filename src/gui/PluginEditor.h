@@ -32,10 +32,17 @@ private:
 
     juce::Slider gainSlider; 
     juce::Slider pitchSlider; 
-    // juce::Slider gainSlider; 
+    juce::Slider startSlider; 
+    juce::Slider endSlider; 
+    juce::Slider attackSlider; 
+    juce::Slider decaySlider; 
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> startAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> endAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
 
     void updateAttachments(int selectedPadIndex);
 
