@@ -98,9 +98,16 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 
 
     for(int i=0; i<8; i++){
+        g.setColour (juce::Colours::cyan);
         auto& thumb = processorRef.thumbs[i];
         juce::Rectangle<int> rect = rects[i];
         thumb->drawChannels(g, rect, 0, thumb->getTotalLength(), 1);
+        g.setColour (juce::Colours::black);
+        g.setOpacity(0.85f);
+        float s = processorRef.start[i]->load(std::memory_order_relaxed);
+        float e = processorRef.end[i]->load(std::memory_order_relaxed);
+        g.fillRect(rect.getX(), rect.getY(), int(rect.getWidth()*s), rect.getHeight());
+        g.fillRect(int(rect.getX()+(rect.getWidth()*e)), rect.getY(), int(rect.getWidth()*(1-e)), rect.getHeight());
     }
 
 

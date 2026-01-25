@@ -207,7 +207,6 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         if(msg.isNoteOn()){
             int note = msg.getNoteNumber();    
             auto data = samplePool.getFileByMidiNote(note);
-            float pgain = gain[data->id]->load(std::memory_order_relaxed);
             float ppitch = pitch[data->id]->load(std::memory_order_relaxed);
             float pstart = start[data->id]->load(std::memory_order_relaxed);
             float pend = end[data->id]->load(std::memory_order_relaxed);
