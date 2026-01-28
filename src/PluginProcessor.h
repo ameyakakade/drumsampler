@@ -7,6 +7,11 @@
 #include "dsp/Voices.h"
 #include <juce_audio_utils/juce_audio_utils.h>
 
+enum fileStatus{
+    NotLoaded,
+    Loaded,
+    NotFound
+};
 
 
 //==============================================================================
@@ -65,6 +70,7 @@ public:
     std::vector<std::unique_ptr<juce::AudioThumbnail>> thumbs;
     juce::AudioThumbnailCache thumbnailCache;
     std::vector<std::unique_ptr<std::atomic<bool>>> padStates;
+    std::vector<std::unique_ptr<std::atomic<int>>> fileStates;
 
     std::vector<std::atomic<float>*> gain;
     std::vector<std::atomic<float>*> pitch;
@@ -73,11 +79,23 @@ public:
     std::vector<std::atomic<float>*> attack;
     std::vector<std::atomic<float>*> decay;
 
+    std::vector<std::atomic<float>*> mono;
+
+    std::vector<std::atomic<float>*> gainmod;
+    std::vector<std::atomic<float>*> pitchmod;
+    std::vector<std::atomic<float>*> startmod;
+    std::vector<std::atomic<float>*> attackmod;
+    std::vector<std::atomic<float>*> decaymod;
+
+    std::vector<std::atomic<float>*> gainrnd;
+    std::vector<std::atomic<float>*> pitchrnd;
+
     std::atomic<float>* pbrange;
     std::atomic<float>* velocitySen;
     std::atomic<float> globalPitch;
 
     void fillPointerArray(std::vector<std::atomic<float>*>& arr, std::string idtag, int idrange);
+    void fillPointerArray(std::vector<std::atomic<bool>*>& arr, std::string idtag, int idrange);
 
     void updateFile(juce::String add, int id);
 

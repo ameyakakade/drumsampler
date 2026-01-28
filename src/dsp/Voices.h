@@ -56,7 +56,7 @@ class voiceManager{
         std::vector<std::unique_ptr<voiceData>> states;
         void prepare(int num);
         void renderAll(juce::AudioBuffer<float>& buffer, int startSample, int endSample, float p, std::vector<std::atomic<float>*> g);
-        void assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate, float start, float end, float attack, float decay);
+        void assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate, float start, float end, float attack, float decay, bool mono);
         void updateState(int i, bool state, int length, int pos, int posAdd, int ID);
         void quitByPad(int id);
 };

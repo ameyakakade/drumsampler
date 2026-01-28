@@ -2,18 +2,22 @@
 #include "PluginEditor.h"
 
 namespace Style {
-    const auto mainBackground     = juce::Colour(0xff1E1E2E); 
-    const auto thumbBackground    = juce::Colour(0xff551E2E); 
-    const auto accentColor        = juce::Colour(0xffF5C2E7); 
-    const auto thumbColor1        = juce::Colour(0xff89DCEB);
-    const auto thumbColor2        = juce::Colour(0xff94E2D5);
-    const auto thumbOverlayColor  = juce::Colour(0xff313244);
-    const auto playHeadColor      = juce::Colour(0xffF38BA8);
-    const auto flashColor         = juce::Colour(0xffF9E2AF);
-    const auto knobTextColor      = juce::Colour(0xffCDD6F4);
-    const auto knobTextColorActive= juce::Colour(0xffA6E3A1);
-    const auto knobMain           = juce::Colour(0xffBAC2DE);
-    const auto transparent        = juce::Colour(0x00000000);
+    const auto mainBackground      = juce::Colour(0xff0f111a); 
+    const auto thumbBackground     = juce::Colour(0xff1a1c25); 
+    const auto accentColor         = juce::Colour(0xff45deed); 
+    const auto thumbColor1         = juce::Colour(0xff7386d5);
+    const auto thumbColor2         = juce::Colour(0xff91a6ff);
+    const auto thumbOverlayColor   = juce::Colour(0xff2d3142);
+    const auto playHeadColor       = juce::Colour(0xffff5f7e);
+    const auto flashColor          = juce::Colour(0xffffd166);
+    const auto knobTextColor       = juce::Colour(0xffbfc7d5);
+    const auto knobTextColorActive = juce::Colour(0xff45deed);
+    const auto knobMain            = juce::Colour(0xff717cb4);
+    const auto knobMainBi          = juce::Colour(0xff4b5263);
+    const auto transparent         = juce::Colour(0x00000000);
+    const auto killAllButton       = juce::Colour(0xffef476f);
+    const auto killAllButtonOn     = juce::Colour(0xffef476f);
+    const auto errorText           = juce::Colour(0xffff0000);
 }
 
 invisibleButton::invisibleButton() : juce::Button("invisible_button"){
@@ -26,23 +30,33 @@ void invisibleButton::paintButton (juce::Graphics& g, bool isMouseOver, bool isB
 }
 
 void knobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider){
-    g.setColour(Style::knobMain);
     
     auto pi = juce::MathConstants<float>::pi;
     auto twoPi = juce::MathConstants<float>::twoPi; // Very useful for circles
 
-    int border_width = slider.isMouseOverOrDragging() ? 8.0 : 3.0;
+    float border_width = slider.isMouseOverOrDragging() ? 8.0 : 3.0;
     int diameter = std::min(width, height) - border_width*2;
     int middleX = width/2;
     int middleY = height/2;
     int left = x + middleX;
     int top = y + middleY;
 
-    juce::Path arc;
+    float min = slider.getMinimum();
 
-    arc.addCentredArc(middleX, middleY, diameter/2, diameter/2, 0, rotaryStartAngle, rotaryStartAngle+(sliderPosProportional*(rotaryEndAngle-rotaryStartAngle)), true);
+    if(min<0){
+        juce::Path arc;
+        double sliderBiPolar = sliderPosProportional - 0.5;
+        g.setColour(Style::knobMainBi);
+        arc.addCentredArc(middleX, middleY, diameter/2, diameter/2, 0, 0, sliderBiPolar*(rotaryEndAngle-rotaryStartAngle), true);
 
-    g.strokePath(arc, juce::PathStrokeType(border_width));
+        g.strokePath(arc, juce::PathStrokeType(border_width));
+
+    }else{
+        g.setColour(Style::knobMain);
+        juce::Path arc;
+        arc.addCentredArc(middleX, middleY, diameter/2, diameter/2, 0, rotaryStartAngle, rotaryStartAngle+(sliderPosProportional*(rotaryEndAngle-rotaryStartAngle)), true);
+        g.strokePath(arc, juce::PathStrokeType(border_width));
+    }
 
     slider.isMouseOverOrDragging() ? g.setColour(Style::knobTextColorActive) : g.setColour(Style::knobTextColor);    
 
@@ -86,11 +100,20 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     }
 
     changeSliders(gainSlider, 0.0, 1.0);
-    changeSliders(pitchSlider, 0.0, 1.0);
+    changeSliders(pitchSlider, 0.0, 3.0);
     changeSliders(startSlider, 0.0, 1.0);
     changeSliders(endSlider, 0.0, 1.0);
     changeSliders(attackSlider, 0.0, 1.0);
     changeSliders(decaySlider, 0.0, 1.0);
+
+    changeSliders(gainModSlider, -1.0, 1.0);
+    changeSliders(pitchModSlider, -1.0, 1.0);
+    changeSliders(startModSlider, -1.0, 1.0);
+    changeSliders(attackModSlider, -1.0, 1.0);
+    changeSliders(decayModSlider, -1.0, 1.0);
+
+    changeSliders(gainRndSlider, 0.0, 1.0);
+    changeSliders(pitchRndSlider, 0.0, 1.0);
 
     changeLabels(gainLabel, "Volume");
     changeLabels(pitchLabel, "Pitch");
@@ -99,24 +122,67 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     changeLabels(attackLabel, "Attack");
     changeLabels(decayLabel, "Decay");
 
-    addAndMakeVisible (gainSlider);
-    addAndMakeVisible (pitchSlider);
-    addAndMakeVisible (startSlider);
-    addAndMakeVisible (endSlider);
-    addAndMakeVisible (attackSlider);
-    addAndMakeVisible (decaySlider);
+    changeLabels(velocityModLabel, "Velocity Mod");
+    velocityModLabel.setFont(juce::FontOptions(18.0f));
+    changeLabels(rndModLabel, "Randomise");
+    rndModLabel.setFont(juce::FontOptions(18.0f));
 
-    addAndMakeVisible(gainLabel);
-    addAndMakeVisible(pitchLabel);
-    addAndMakeVisible(startLabel);
-    addAndMakeVisible(endLabel);
-    addAndMakeVisible(attackLabel);
-    addAndMakeVisible(decayLabel);
+    changeLabels(gainModLabel, "Volume");
+    changeLabels(pitchModLabel, "Pitch");
+    changeLabels(startModLabel, "Start");
+    changeLabels(attackModLabel, "Attack");
+    changeLabels(decayModLabel, "Decay");
 
-    setSize (750, 540);
+    changeLabels(gainRndLabel, "Volume");
+    changeLabels(pitchRndLabel, "Pitch");
+
+    addAndMakeVisible (killAll);
+    addAndMakeVisible (monoButton);
+    addAndMakeVisible (modeButton);
+
+    killAll.setColour(juce::TextButton::buttonColourId, Style::killAllButton);
+    killAll.setColour(juce::TextButton::buttonOnColourId, Style::killAllButtonOn);
+
+    startSlider.onValueChange = [this]{
+        updateWaveformCache();
+        double end = endSlider.getValue();
+        double start = startSlider.getValue();
+        if(end<=start) endSlider.setValue(start+0.01);
+    };
+
+    endSlider.onValueChange = [this]{
+        updateWaveformCache();
+        double end = endSlider.getValue();
+        double start = startSlider.getValue();
+        if(end<=start) startSlider.setValue(end-0.01);
+    };
+
+    attackSlider.onValueChange = [this]{
+        double attack = attackSlider.getValue();
+        double decay = decaySlider.getValue();
+        if(attack>decay) decaySlider.setValue(attack);
+    };
+
+    decaySlider.onValueChange = [this]{
+        double attack = attackSlider.getValue();
+        double decay = decaySlider.getValue();
+        if(attack>decay) attackSlider.setValue(decay);
+    };
+
+    killAll.onClick = [this]{
+        for(auto& voice : processorRef.pool.voices) voice->quitVoice();
+    };
+
+    modeButton.onClick = [this]{
+        int m = modeButton.getToggleState();
+        setMode(m);
+    };
+
+    setSize (750, 570);
     startTimerHz(60);
     
     highX = highY = -1;
+    counter = 0;
 
 }
 
@@ -127,9 +193,11 @@ AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 
 void AudioPluginAudioProcessorEditor::updateWaveformCache(){
     
-    waveformCache = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+    waveformCache = juce::Image(juce::Image::ARGB, getWidth()*2, getHeight()*2, true);
 
     juce::Graphics g(waveformCache);
+
+    g.addTransform(juce::AffineTransform::scale(2));
 
     for(int i=0; i<8; i++){
         g.saveState();
@@ -155,6 +223,7 @@ void AudioPluginAudioProcessorEditor::updateWaveformCache(){
 
         thumb->drawChannels(g, rect, 0, thumb->getTotalLength(), 1);
 
+
         g.setColour(Style::thumbBackground.withAlpha(0.2f));
         for (int y = rect.getY(); y < rect.getBottom(); y += 3){
             g.drawHorizontalLine(y, (float)rect.getX(), (float)rect.getRight());
@@ -166,6 +235,16 @@ void AudioPluginAudioProcessorEditor::updateWaveformCache(){
         float e = processorRef.end[i]->load(std::memory_order_relaxed);
         g.fillRect(rect.getX(), rect.getY(), int(rect.getWidth()*s), rect.getHeight());
         g.fillRect(int(rect.getX()+(rect.getWidth()*e)), rect.getY(), int(rect.getWidth()*(1-e)+1), rect.getHeight());
+
+        int fileState = processorRef.fileStates[i]->load(std::memory_order_relaxed);
+        if(fileState==fileStatus::NotFound){
+            g.setColour(Style::errorText);
+            g.drawText("FILE NOT FOUND!", rect, juce::Justification::centred, false);
+        }else if(fileState==fileStatus::NotLoaded){
+            g.setColour(Style::accentColor);
+            g.drawText("Not Loaded", rect, juce::Justification::centred, false);
+        }
+
         g.restoreState();
     }
 }
@@ -173,13 +252,15 @@ void AudioPluginAudioProcessorEditor::updateWaveformCache(){
 //==============================================================================
 void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 {
+
+
     g.fillAll (Style::mainBackground);
 
     if (waveformCache.isValid())
-        g.drawImageAt(waveformCache, 0, 0);
+    g.drawImageWithin(waveformCache, 0, 0, getWidth(), getHeight(), 
+                          juce::RectanglePlacement::fillDestination);
     else
         updateWaveformCache(); // Safety fallback
-
 
     for(int t=0; t<30; t++){
         g.saveState();
@@ -255,6 +336,33 @@ void AudioPluginAudioProcessorEditor::resized()
     endLabel.setBounds(375,380,90,20);
     attackLabel.setBounds(475,380,90,20);
     decayLabel.setBounds(575,380,90,20);
+
+    velocityModLabel.setBounds(50, 370, 410, 30);
+    rndModLabel.setBounds(395, 370, 410, 30);
+
+    gainModSlider.setBounds(50, 430, 70, 70);
+    pitchModSlider.setBounds(135, 430, 70, 70);
+    startModSlider.setBounds(220, 430, 70, 70);
+    attackModSlider.setBounds(305, 430, 70, 70);
+    decayModSlider.setBounds(390, 430, 70, 70);
+
+    gainModLabel.setBounds(50,405,70,20);
+    pitchModLabel.setBounds(135,405,70,20);
+    startModLabel.setBounds(220,405,70,20);
+    attackModLabel.setBounds(305,405,70,20);
+    decayModLabel.setBounds(390,405,70,20);
+
+    gainRndLabel.setBounds(525,405,70,20);
+    pitchRndLabel.setBounds(610,405,70,20);
+
+    gainRndSlider.setBounds(525, 430, 70, 70);
+    pitchRndSlider.setBounds(610, 430, 70, 70);
+
+    killAll.setBounds(250, 510, 70, 40);
+    monoButton.setBounds(350, 510, 70, 40);
+    modeButton.setBounds(450, 510, 70, 40);
+
+    setMode(0);
     
     for(int i=0; i<8; i++){
         padButtons[i]->setBounds(rects[i]);
@@ -263,6 +371,15 @@ void AudioPluginAudioProcessorEditor::resized()
 
 
 void AudioPluginAudioProcessorEditor::timerCallback(){
+    if(counter>=60){
+        counter = 0;
+        updateWaveformCache();
+        for(int i=0; i<8; i++){
+            int j = processorRef.fileStates[i]->load(std::memory_order_relaxed);
+            DBG(j);
+        }
+    }
+    counter += 1;
     repaint();
 }
 
@@ -307,6 +424,7 @@ void AudioPluginAudioProcessorEditor::filesDropped(const juce::StringArray &file
             if(id>=8) break;
         }
     }
+    updateWaveformCache();
 }
 
 
@@ -319,6 +437,14 @@ void AudioPluginAudioProcessorEditor::updateAttachments(int selectedPadIndex){
     attackAttachment.reset();
     decayAttachment.reset();
 
+    gainModAttachment.reset();
+    pitchModAttachment.reset();
+    startModAttachment.reset();
+    attackModAttachment.reset();
+    decayModAttachment.reset();
+
+    monoAttachment.reset();
+
     selectedPad.store(selectedPadIndex);
     int i = selectedPad.load();
 
@@ -328,6 +454,17 @@ void AudioPluginAudioProcessorEditor::updateAttachments(int selectedPadIndex){
     endAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "End"+std::to_string(i), endSlider); 
     attackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Attack"+std::to_string(i), attackSlider); 
     decayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "Decay"+std::to_string(i), decaySlider); 
+
+    monoAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(processorRef.states, "Mono"+juce::String(i), monoButton); 
+
+    gainModAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "VolumeMod"+std::to_string(i), gainModSlider); 
+    pitchModAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "PitchMod"+std::to_string(i), pitchModSlider); 
+    startModAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "StartMod"+std::to_string(i), startModSlider); 
+    attackModAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "AttackMod"+std::to_string(i), attackModSlider);
+    decayModAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "DecayMod"+std::to_string(i), decayModSlider); 
+
+    gainRndAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "VolumeRnd"+std::to_string(i), gainRndSlider); 
+    pitchRndAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(processorRef.states, "PitchRnd"+std::to_string(i), pitchRndSlider); 
 }
 
 
@@ -337,9 +474,48 @@ void AudioPluginAudioProcessorEditor::changeSliders(juce::Slider& slider, double
     slider.setTextBoxStyle (juce::Slider::NoTextBox, true, 0, 0);
     slider.setColour(juce::Slider::textBoxOutlineColourId, Style::transparent);
     slider.setLookAndFeel(&style);
+    addAndMakeVisible(slider);
 }
 
 void AudioPluginAudioProcessorEditor::changeLabels(juce::Label& label, juce::String text){
     label.setText(text, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::horizontallyCentred);
+    addAndMakeVisible(label);
+}
+
+void AudioPluginAudioProcessorEditor::setMode(int mode){
+    gainSlider.setVisible(1-mode);
+    pitchSlider.setVisible(1-mode);
+    startSlider.setVisible(1-mode);
+    attackSlider.setVisible(1-mode);
+    decaySlider.setVisible(1-mode);
+    endSlider.setVisible(1-mode);
+
+    gainLabel.setVisible(1-mode);
+    pitchLabel.setVisible(1-mode);
+    startLabel.setVisible(1-mode);
+    endLabel.setVisible(1-mode);
+    attackLabel.setVisible(1-mode);
+    decayLabel.setVisible(1-mode);
+
+    gainModSlider.setVisible(mode);
+    pitchModSlider.setVisible(mode);
+    startModSlider.setVisible(mode);
+    attackModSlider.setVisible(mode);
+    decayModSlider.setVisible(mode);
+
+    gainRndSlider.setVisible(mode);
+    pitchRndSlider.setVisible(mode);
+
+    gainModLabel.setVisible(mode);
+    pitchModLabel.setVisible(mode);
+    startModLabel.setVisible(mode);
+    attackModLabel.setVisible(mode);
+    decayModLabel.setVisible(mode);
+
+    velocityModLabel.setVisible(mode);
+    rndModLabel.setVisible(mode);
+
+    gainRndLabel.setVisible(mode);
+    pitchRndLabel.setVisible(mode);
 }

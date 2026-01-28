@@ -16,10 +16,17 @@ juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(){
         group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"End" + id, 1}, "End " + id, 0, 1, 1));
         group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"Attack" + id, 1}, "Attack " + id, 0, 1, 0));
         group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"Decay" + id, 1}, "Decay " + id, 0, 1, 1));
+        group->addChild(std::make_unique<juce::AudioParameterBool> (juce::ParameterID{"Mono" + id, 1}, "Mono " + id, false));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"VolumeMod" + id, 1}, "Volume Mod " + id, -1, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"PitchMod" + id, 1}, "Pitch Mod" + id, -1, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"AttackMod" + id, 1}, "Attack Mod" + id, -1, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"DecayMod" + id, 1}, "Decay Mod" + id, -1, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"StartMod" + id, 1}, "Start Mod " + id, -1, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"VolumeRnd" + id, 1}, "Volume Randomize " + id, 0, 1, 0));
+        group->addChild(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"PitchRnd" + id, 1}, "Pitch Randomize " + id, 0, 1, 0));
         layout.add(std::move(group));
     }
     layout.add(std::make_unique<juce::AudioParameterInt> (juce::ParameterID{"Pitch_Range", 1}, "Pitch Bend Range", 1, 18, 2));
-    layout.add(std::make_unique<juce::AudioParameterFloat> (juce::ParameterID{"Velocity_Sens", 1}, "Velocity Sensitivity", 0, 3, 1.5));
     return layout;     
 }
 
@@ -58,6 +65,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     for(int i=0; i<noOfPads; i++){
         thumbs.emplace_back(std::make_unique<juce::AudioThumbnail>(noSFT, formatManager, thumbnailCache));
         padStates.emplace_back(std::make_unique<std::atomic<bool>>());
+        fileStates.emplace_back(std::make_unique<std::atomic<int>>(fileStatus::NotLoaded));
     }
 
     pool.prepare(30);
@@ -69,8 +77,18 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     fillPointerArray(attack, "Attack", 8);
     fillPointerArray(decay, "Decay", 8);
 
+    fillPointerArray(mono, "Mono", 8);
+
+    fillPointerArray(gainmod, "VolumeMod", 8);
+    fillPointerArray(pitchmod, "PitchMod", 8);
+    fillPointerArray(startmod, "StartMod", 8);
+    fillPointerArray(attackmod, "AttackMod", 8);
+    fillPointerArray(decaymod, "DecayMod", 8);
+
+    fillPointerArray(gainrnd, "VolumeRnd", 8);
+    fillPointerArray(pitchrnd, "PitchRnd", 8);
+
     pbrange = states.getRawParameterValue("Pitch_Range");
-    velocitySen = states.getRawParameterValue("Velocity_Sens");
     globalPitch.store(1, std::memory_order_relaxed);
 }
 
@@ -184,9 +202,6 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals; // CPU safety feature.
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    // TRANSLATION: Safety Cleanup.
-    // "If we have 2 Inputs but 4 Outputs, silence the extra 2 Outputs so they don't scream noise."
-
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -195,7 +210,8 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     float range = pbrange->load(std::memory_order_relaxed);
     float pbendfactor = std::pow(2, range/12.0);
-    float vsens = velocitySen->load(std::memory_order_relaxed);
+    float vsens = 2;
+    DBG((int)mono[0]->load(std::memory_order_relaxed));
     
     int head = 0;
     
@@ -212,9 +228,10 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             float pend = end[data->id]->load(std::memory_order_relaxed);
             float pattack = attack[data->id]->load(std::memory_order_relaxed);
             float pdecay = decay[data->id]->load(std::memory_order_relaxed);
+            bool pmono = mono[data->id]->load(std::memory_order_relaxed);
             float v = std::pow(msg.getFloatVelocity(), vsens);
             if(data->file){
-                pool.assignVoice(*data->file, data->id, note, v, data->sampleRate*ppitch, currentSampleRate, pstart, pend, pattack, pdecay);
+                pool.assignVoice(*data->file, data->id, note, v, data->sampleRate*ppitch, currentSampleRate, pstart, pend, pattack, pdecay, pmono);
                 padStates[data->id]->store(true, std::memory_order_relaxed);
             }
         }
@@ -233,7 +250,9 @@ void AudioPluginAudioProcessor::updateFile(juce::String add, int id){
     pool.quitByPad(id);
     samplePool.updatePadFile(id, file, formatManager);
     thumbs[id]->setSource(new juce::FileInputSource(file));
-
+    if(add == "") fileStates[id]->store(fileStatus::NotLoaded, std::memory_order_relaxed);
+    else if(!file.exists()) fileStates[id]->store(fileStatus::NotFound, std::memory_order_relaxed); 
+    else fileStates[id]->store(fileStatus::Loaded, std::memory_order_relaxed); 
 }
 
 

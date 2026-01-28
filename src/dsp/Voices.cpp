@@ -47,7 +47,9 @@ void voice::renderAudio(juce::AudioBuffer<float>& buffer, int startSample, int e
             float lerpedgain = (oldgain*(endSample-i)+gain*(i-startSample))/(endSample-startSample);
             double envelopeGain = 1.0;
             if(playHeadNow<=attackTime) envelopeGain = (playHeadNow - startPos)*attackFactor;
-            else if(playHeadNow>=decayTime) envelopeGain = std::pow((numSamples - playHeadNow)*decayFactor,2);
+            else if(playHeadNow>=decayTime){
+                envelopeGain = (numSamples - playHeadNow)*(numSamples - playHeadNow)*decayFactor*decayFactor;
+            }
 
             channelData[i] += (sourceData[y]*(1-f) + sourceData[y+1]*f)*velocity*lerpedgain*envelopeGain;
             playHeadNow += playRatioNow;
@@ -97,9 +99,24 @@ void voiceManager::renderAll(juce::AudioBuffer<float>& buffer, int startSample, 
     }
 }
 
-void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate, float start, float end, float attack, float decay){
+void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int midiNote, float velocity, double sRate, double bufferSRate, float start, float end, float attack, float decay, bool mono){
     int oldest = 0;
     bool assigned = false;
+
+    if(mono){
+
+        for(int i =0 ; i<numVoices; i++){
+            DBG("pad id" << voices[i]->padID);
+            if(voices[oldest]->age < voices[i]->age) oldest = i;
+            if(voices[i]->padID == padNo){
+                voices[i]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate, start, end, attack, decay);
+                updateState(i, true, buffer.getNumSamples(), start*buffer.getNumSamples(), -1, padNo);
+                return;
+            }
+        }
+
+    }
+
     for(int i = 0; i<numVoices; i++){
         if(voices[oldest]->age < voices[i]->age) oldest = i;
         if(!voices[i]->active){
@@ -113,6 +130,7 @@ void voiceManager::assignVoice(juce::AudioBuffer<float>& buffer, int padNo, int 
         voices[oldest]->startVoice(buffer, padNo, midiNote, velocity, sRate, bufferSRate, start, end, attack, decay);
         updateState(oldest, true, buffer.getNumSamples(), start*buffer.getNumSamples(), -1, padNo);
     }
+    
 }
 
 void voiceManager::updateState(int i, bool state, int length, int pos, int posAdd, int ID){
